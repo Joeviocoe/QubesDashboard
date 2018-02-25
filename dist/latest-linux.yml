@@ -1,9 +1,0 @@
-version: 1.0.0
-files:
-  - url: QubesDashboard-1.0.0-x86_64.AppImage
-    sha512: zsERKHGiGVOljfwk+cgnt+yyDfKFKpu5L58C29zK3SnFBEylW/q8nU+NC3wFSWu/Vk7C1fBpd9RPwsixoB3muA==
-    size: 53855733
-    blockMapSize: 57145
-path: QubesDashboard-1.0.0-x86_64.AppImage
-sha512: zsERKHGiGVOljfwk+cgnt+yyDfKFKpu5L58C29zK3SnFBEylW/q8nU+NC3wFSWu/Vk7C1fBpd9RPwsixoB3muA==
-releaseDate: '2018-02-25T08:26:28.738Z'

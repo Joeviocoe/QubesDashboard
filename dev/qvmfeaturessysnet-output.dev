@@ -1,4 +1,0 @@
-network-manager         1
-service.ntpd            
-service.clocksync       1
-service.meminfo-writer  
