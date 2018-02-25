@@ -544,13 +544,13 @@ function netvmConnections() {
       source:"sys-net",
       target:"sys-firewall",
       endpoint:"Rectangle",
-      anchor: "TopRight"
+      anchor: "Continuous"
   });
   jsPlumb.connect({
       source:"sys-firewall",
       target:"INTERNET",
       endpoint:"Rectangle",
-      anchor: "TopRight"
+      anchor: "Continuous"
   });
 }
 
@@ -559,30 +559,30 @@ function templateConnections() {
       source:"fedora-26",
       target:"sys-firewall",
       endpoint:"Dot",
-      anchor: "Left"
+      anchor: "Continuous"
   });
   jsPlumb.connect({
       source:"debian-9",
       target:"STORAGE",
       endpoint:"Dot",
-      anchor: "Left"
+      anchor: "Continuous"
   });
 }
 
 ///////////////////////////////////////////////////////////////////
 
-function heartbeat1() {
+function heartbeat1(int) {
   setInterval( function() {
     if ( $('.vm').length == 0 ) { getVMs(); drawVMs(); }
     refreshVMs();
-  },5000)
+  },int)
 }
 
-function heartbeat2() {
+function heartbeat2(int) {
   setInterval( function() {
     buildAttributes();
     checkUpdates();
-  },60000)
+  },int)
 }
 
 ///////////////////////////////
@@ -600,6 +600,7 @@ jsPlumb.ready(function() {
   //netvmConnections();
   //templateConnections();
   eventListeners();
-  heartbeat1();
-  heartbeat2();
+  heartbeat1(5000);
+  heartbeat2(60000);
+
 });
