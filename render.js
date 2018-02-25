@@ -223,7 +223,7 @@ function checkUpdates() {
   for ( vm in VMs ) {
     if ( VMs[vm]['updates-available'] == 1 ) {
       $('#'+vm).addClass('updatableVM');
-      console.log(vm + ' has an update available');
+      console.log(vm + ':\t\t\t has an update available');
     }
   }
 }
@@ -501,6 +501,21 @@ const menu_apps = new Menu()
 function createMenu_Apps(e) {
   var vm = $(e.target).parent('.vm').attr('id');
   console.log(vm + ' - Creating App List for VM');
+  getActiveWindow();
+}
+
+///////////////////////////////////////////////////////////////////
+
+function getActiveWindow() {
+  var xprop = run(
+    "xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME",'','sync'
+  );
+  try {
+    var win = xprop.split(' = ')[1];
+    console.log('Current Active Window' + win);
+  } catch (err) {
+      err.stderr; err.pid; err.signal; err.status; console.error(err);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////

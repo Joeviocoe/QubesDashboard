@@ -19,6 +19,7 @@ body {
     padding-right: 25px;
     background-color: white;
     color: black;
+    z-index: -1;
 }
 
 #setTheme > span,input,button {
@@ -30,6 +31,16 @@ body {
 
 #setTheme > span {
     margin-right: 60px;
+}
+
+#setTheme > #delay {
+  color: blue;
+  width: 30px;
+}
+
+#setTheme > .invalid {
+  opacity: 0.5;
+  color: gray;
 }
 
 .hidden {
