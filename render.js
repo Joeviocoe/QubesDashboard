@@ -52,10 +52,46 @@ function loadcssfile(filePath) {
 }
 
 /// Run a command on host system
-function run(cmd,opt,stream) {
+function run(cmd,stream,dest,opt) {
   var output = "";
   if ( opt != 'quiet' ) { console.log('Running: ' + cmd) }
-  var cmdname = cmd.replace(/\W/g,'-');
+  var cmdname = cmd.replace(/\W/g,'-').substring(0,31);
+  try {
+    if        ( devenv == 0 ) {
+      if        ( stream == 'async' ) {
+        exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
+        output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
+      } else if ( stream == 'sync' ) {
+        output = execSync(cmd);
+      }
+    } else if ( devenv == 1 ) {
+      if        ( stream == 'async' ) {
+        if        ( dest == 'local' ) {
+          exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
+          output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
+        } else if ( dest == 'remote' ) {
+          exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
+          output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
+        }
+      } else if ( stream == 'sync' ) {
+        if        ( dest == 'local' ) {
+          output = execSync(cmd);
+        } else if ( dest == 'remote' ) {
+          exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
+          output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
+        }
+      }
+    }
+  } catch (err) {
+    err.stderr; err.pid; err.signal; err.status; //console.error(err);
+  }
+  return output.toString().trim();
+}
+
+/*
+  exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
+  output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
+
   if ( devenv == 1 && opt != 'local' ) {
     try {
       exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
@@ -63,24 +99,10 @@ function run(cmd,opt,stream) {
     } catch (err) {
       err.stderr; err.pid; err.signal; err.status; console.error(err);
     }
-  } else if ( devenv == 0 || opt == 'local' ) {
-    try {
-      if ( stream == 'async' ) {
-        if ( devenv == 0 ) {
-          exec(cmd+' > '+cmdDataCache+cmdname)
-          output = fs.readFileSync(cmdDataCache+cmdname);
-        } else {
-          exec(cmd);
-        }
-      } else if ( devenv == 1 ) {
-        output = execSync(cmd);
-      }
-    } catch (err) {
-      err.stderr; err.pid; err.signal; err.status; console.error(err);
-    }
-  }
+  } else
   return output.toString().trim();
 }
+*/
 
 /// Create Snap Grid
 var vert_int = window.innerHeight / 50;
@@ -98,7 +120,7 @@ var VMs = {};
 
 /// Get updated info from qvm-ls
 function getVMs() {
-  var ls = run('qvm-ls','quiet','async');
+  var ls = run('qvm-ls','async','remote','quiet',);
   var head = ls.split('\n')[0].toString().split(/\s+/g);
   var qvm_ls = ls.split('\n'); qvm_ls.shift()
   buildVMs(head,qvm_ls);
@@ -121,8 +143,8 @@ function buildVMs(header,list) {
 /// Add preference/feature attributes to VM object array
 function buildAttributes() {
     Object.keys(VMs).forEach(function (vm) {
-      var prefs = run('qvm-prefs ' + vm,'quiet','async').split('\n');
-      var features = run('qvm-features ' + vm,'quiet','async').split('\n');
+      var prefs = run('qvm-prefs ' + vm,'async','remote','quiet').split('\n');
+      var features = run('qvm-features ' + vm,'async','remote','quiet').split('\n');
       prefs.forEach(function (item) {
         var item = item.split(/\s+/g);
         VMs[vm][item[0]] = item[2];
@@ -138,8 +160,8 @@ function buildAttributes() {
 
 /// Get Devices
 function buildDevices() {
-  //var usb = run('qvm-usb','quiet','async');
-  //var pci = run('qvm-pci','quiet','async');
+  //var usb = run('qvm-usb','async','remote','quiet');
+  //var pci = run('qvm-pci','async','remote','quiet');
 }
 
 /// Set the board with VMs
@@ -294,7 +316,7 @@ function selectBackground() {
     function (file) {
       if ( file !== undefined ) {
         file = '"'+file+'"';
-        var type = run('file '+file,'local','sync').split(': ')[1];
+        var type = run('file '+file,'sync','local').split(': ')[1];
         if ( type.indexOf('image') !== -1 ) {
           console.log('Changing Background\nFrom:\t' + bgimage + '\nTo:\t\t' + file + '\nType:\t' + type);
           var temp = $('body').css('background-image').replace(bgimage.replace(/"/g,''),file.replace(/"/g,''));
@@ -361,7 +383,7 @@ function saveTheme(bgimage,bgcolor,txtcolor) {
     }\n\
   "
   if ( bgimage.replace(/"/g,'') != bgimage_file.replace(/"/g,'') ) {
-    run('cp -f '+bgimage+' '+bgimage_file,'local','async');
+    run('cp -vf "'+bgimage+'" "'+bgimage_file+'"','async','local');
   }
   fs.writeFileSync(theme_css,css,function(err) {
     if (err) throw err;
@@ -404,7 +426,7 @@ function createMenu_VM(e) {
       label: 'Start Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-start ' + vm,'','async')
+        run('qvm-start ' + vm,'async','remote')
       }
     }))
   } else if ( state == 'Running' || state == 'Paused' ) {
@@ -412,7 +434,7 @@ function createMenu_VM(e) {
       label: 'Shutdown Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-shutdown --wait ' + vm,'','async')
+        run('qvm-shutdown --wait ' + vm,'async','remote')
       }
     }))
   }
@@ -422,7 +444,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Pausing VM: " + vm);
-        run('qvm-pause ' + vm,'','async')
+        run('qvm-pause ' + vm,'async','remote')
       }
     }))
   }
@@ -432,7 +454,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Unpausing VM: " + vm);
-        run('qvm-unpause ' + vm,'','async')
+        run('qvm-unpause ' + vm,'async','remote')
       }
     }))
   }
@@ -442,7 +464,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Restarting VM: " + vm);
-        run('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm,'','async')
+        run('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm,'async','remote')
       }
     }))
   }
@@ -453,7 +475,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Killing VM: " + vm);
-        run('qvm-kill ' + vm,'','async')
+        run('qvm-kill ' + vm,'async','remote')
       }
     }))
   }
@@ -465,22 +487,22 @@ function createMenu_VM(e) {
       {
         label: 'Basic Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab basic ' + vm,'','async') }
+        click: function () { run('qubes-vm-settings --tab basic ' + vm,'async','remote') }
       },
       {
         label: 'Advanced Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab advanced ' + vm,'','async') }
+        click: function () { run('qubes-vm-settings --tab advanced ' + vm,'async','remote') }
       },
       {
         label: 'Firewall Rules',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab firewall ' + vm,'','async') }
+        click: function () { run('qubes-vm-settings --tab firewall ' + vm,'async','remote') }
       },
       {
         label: 'Applications',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab applications ' + vm,'','async') }
+        click: function () { run('qubes-vm-settings --tab applications ' + vm,'async','remote') }
       }
     ]
   }))
@@ -508,7 +530,7 @@ function createMenu_Apps(e) {
 
 function getActiveWindow() {
   var xprop = run(
-    "xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME",'','sync'
+    "xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME",'remote','async'
   );
   try {
     var win = xprop.split(' = ')[1];
@@ -549,6 +571,30 @@ function eventListeners() {
   $('#save').click(function() {
     saveTheme(bgimage,bgcolor,txtcolor);
     location.reload();
+  });
+  /* http://jsfiddle.net/7qqz33vm/120/
+  function timerIncrement() {
+  	if ( $("#on").is(":checked") && $("#idle").is(":checked") ) {
+      idleTime = idleTime + 1;
+      var duration = $("#delay").val();
+      if ( idleTime > duration ) {
+          // TURN OFF ANIMATION
+          console.clear();
+          console.log(idleTime);
+      }
+    }
+  }*/
+  $("#off").change(function(){
+      if ( this.checked ) {
+      	$("#idle,#delay,form>span").addClass('invalid').prop('disabled', true);
+        // TURN OFF ANIMATION
+      }
+  });
+  $("#on").change(function(){
+      if ( this.checked ) {
+      	$("#idle,#delay,form>span").removeClass('invalid').prop('disabled', false);
+        // TURN ON ANIMATION
+      }
   });
 }
 
