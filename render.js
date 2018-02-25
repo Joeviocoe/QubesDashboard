@@ -400,7 +400,7 @@ function createMenu_VM(e) {
       label: 'Start Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-start ' + vm.'','async')
+        run('qvm-start ' + vm,'','async')
       }
     }))
   } else if ( state == 'Running' || state == 'Paused' ) {
@@ -408,7 +408,7 @@ function createMenu_VM(e) {
       label: 'Shutdown Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-shutdown --wait ' + vm.'','async')
+        run('qvm-shutdown --wait ' + vm,'','async')
       }
     }))
   }
@@ -418,7 +418,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Pausing VM: " + vm);
-        run('qvm-pause ' + vm.'','async')
+        run('qvm-pause ' + vm,'','async')
       }
     }))
   }
@@ -428,7 +428,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Unpausing VM: " + vm);
-        run('qvm-unpause ' + vm.'','async')
+        run('qvm-unpause ' + vm,'','async')
       }
     }))
   }
@@ -438,7 +438,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Restarting VM: " + vm);
-        run('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm.'','async')
+        run('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm,'','async')
       }
     }))
   }
@@ -449,7 +449,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Killing VM: " + vm);
-        run('qvm-kill ' + vm.'','async')
+        run('qvm-kill ' + vm,'','async')
       }
     }))
   }
@@ -461,22 +461,22 @@ function createMenu_VM(e) {
       {
         label: 'Basic Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab basic ' + vm.'','async') }
+        click: function () { run('qubes-vm-settings --tab basic ' + vm,'','async') }
       },
       {
         label: 'Advanced Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab advanced ' + vm.'','async') }
+        click: function () { run('qubes-vm-settings --tab advanced ' + vm,'','async') }
       },
       {
         label: 'Firewall Rules',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab firewall ' + vm.'','async') }
+        click: function () { run('qubes-vm-settings --tab firewall ' + vm,'','async') }
       },
       {
         label: 'Applications',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab applications ' + vm.'','async') }
+        click: function () { run('qubes-vm-settings --tab applications ' + vm,'','async') }
       }
     ]
   }))
