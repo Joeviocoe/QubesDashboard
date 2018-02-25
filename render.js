@@ -54,7 +54,7 @@ function loadcssfile(filePath) {
 /// Run a command on host system
 function run(cmd,opt,stream) {
   var output = "";
-  if ( opt != 'quietX' ) { console.log('Running: ' + cmd) }
+  if ( opt != 'quiet' ) { console.log('Running: ' + cmd) }
   var cmdname = cmd.replace(/\W/g,'-');
   if ( devenv == 1 && opt != 'local' ) {
     try {
@@ -227,7 +227,7 @@ function checkUpdates() {
 ///////////////////////////////////////////////////////////////////
 
 /// THEME CONTROL
-var bgimage, bgcolor, txtcolor;
+var bgimage = bgimage_file, bgcolor, txtcolor;
 
 function initializeTheme() {
   if ( !fs.existsSync(vms_css) ) {
@@ -285,7 +285,8 @@ function selectBackground() {
   dialog.showOpenDialog({
     title: "Select Background Image",
     defaultPath: './',
-    filters: [ {name: 'Images', extensions: ['jpg', 'png', 'gif']} ] },
+    filters: [ {name: 'Images', extensions: ['jpg', 'png', 'gif']} ]
+  },
     function (file) {
       if ( file !== undefined ) {
         file = '"'+file+'"';
@@ -296,6 +297,7 @@ function selectBackground() {
           console.log( $('body').css('background-image') + '\n' + temp );
           $('body').css('background-image',temp);
           bgimage = file;
+          themeInvert();
         }
       }
     }
@@ -333,10 +335,8 @@ function getImageLightness(imageSrc,callback) {
 
 /// Invert Cube Color if neccessary
 function themeInvert() {
-  if ( bgimage !== 'none' ) {
-    bgimage = bgimage.split('file://')[1].split('")')[0];
-  }
-  var r = getImageLightness(bgimage,function(brightness){
+  bgimage = bgimage.replace(/"/g,'');
+  getImageLightness(bgimage,function(brightness){
     if ( brightness < 128 ) {
       $('img.cubeicon[src*="black"]').each(function() {
         var lightimg = $(this).attr('src').replace('black','white');
@@ -362,7 +362,7 @@ function saveTheme(bgimage,bgcolor,txtcolor) {
   fs.writeFileSync(theme_css,css,function(err) {
     if (err) throw err;
   });
-  //themeInvert();
+  themeInvert();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -592,6 +592,7 @@ jsPlumb.ready(function() {
   getVMs();
   drawVMs();
   refreshVMs();
+  themeInvert();
   //netvmConnections();
   //templateConnections();
   eventListeners();
