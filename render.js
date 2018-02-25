@@ -66,9 +66,13 @@ function run(cmd,opt,stream) {
   } else if ( devenv == 0 || opt == 'local' ) {
     try {
       if ( stream == 'async' ) {
-        exec(cmd+' > '+cmdDataCache+cmdname)
-        output = fs.readFileSync(cmdDataCache+cmdname);
-      } else {
+        if ( devenv == 0 ) {
+          exec(cmd+' > '+cmdDataCache+cmdname)
+          output = fs.readFileSync(cmdDataCache+cmdname);
+        } else {
+          exec(cmd);
+        }
+      } else if ( devenv == 1 ) {
         output = execSync(cmd);
       }
     } catch (err) {
@@ -201,7 +205,7 @@ function toggleMove() {
 
 /// Save VM positions to CSS file
 function saveVMpositions() {
-  fs.writeFileSync(vms_css,'#dom0 { left: 50px; top: 50px; }\n');
+  fs.writeFileSync(vms_css,'');
   for ( vm in VMs ) {
     var elem = $('#'+vm), id = elem.attr('id');
     var left = (elem.css('left').split('px')[0] / window.innerWidth * 100).toFixed(0) + '%';
@@ -231,7 +235,7 @@ var bgimage = bgimage_file, bgcolor, txtcolor;
 
 function initializeTheme() {
   if ( !fs.existsSync(vms_css) ) {
-    fs.writeFileSync(vms_css,'#dom0 { left: 50px; top: 50px; }\n');
+    fs.writeFileSync(vms_css,'');
   }
   if ( !fs.existsSync(theme_css) || !fs.existsSync(bgimage_file) ) {
     // Use defaults
