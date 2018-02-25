@@ -1,0 +1,6 @@
+default_dispvm  -  fedora-25
+klass           D  AdminVM
+label           -  black
+name            D  dom0
+qid             D  0
+uuid            D  00000000-0000-0000-0000-000000000000

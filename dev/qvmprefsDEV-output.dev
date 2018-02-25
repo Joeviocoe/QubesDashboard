@@ -1,0 +1,36 @@
+autostart           D  False
+backup_timestamp    U
+debug               D  False
+default_dispvm      D  fedora-25-dvm
+default_user        D  user
+gateway             D  
+gateway6            D  
+include_in_backups  D  True
+installed_by_rpm    D  False
+ip                  D  10.137.0.8
+ip6                 D  
+kernel              D  4.14.18-1
+kernelopts          D  nopat
+klass               D  StandaloneVM
+label               -  blue
+mac                 D  00:16:3E:5E:6C:00
+maxmem              D  4000
+memory              -  1024
+name                -  DEV
+netvm               -  sys-firewall
+provides_network    -  False
+qid                 -  8
+qrexec_timeout      D  60
+start_time          D  1519247234.37
+stubdom_mem         U
+stubdom_xid         D  9
+updateable          D  True
+uuid                -  fb9391de-14ac-4617-9457-8ed4af88de71
+vcpus               D  2
+virt_mode           -  hvm
+visible_gateway     D  10.137.0.6
+visible_gateway6    D  
+visible_ip          D  10.137.0.8
+visible_ip6         D  
+visible_netmask     D  255.255.255.255
+xid                 D  8

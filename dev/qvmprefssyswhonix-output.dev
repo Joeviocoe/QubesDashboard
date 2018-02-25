@@ -1,0 +1,38 @@
+autostart             -  False
+backup_timestamp      U
+debug                 D  False
+default_dispvm        -  fedora-25-dvm
+default_user          D  user
+gateway               D  10.137.0.10
+gateway6              D  
+include_in_backups    D  True
+installed_by_rpm      D  False
+ip                    D  10.137.0.10
+ip6                   D  
+kernel                D  4.14.18-1
+kernelopts            D  nopat
+klass                 D  AppVM
+label                 -  orange
+mac                   D  00:16:3E:5E:6C:00
+maxmem                D  4000
+memory                -  500
+name                  -  sys-whonix
+netvm                 -  sys-net
+provides_network      -  True
+qid                   -  10
+qrexec_timeout        D  60
+start_time            D  
+stubdom_mem           U
+stubdom_xid           D  -1
+template              -  whonix-gw
+template_for_dispvms  D  False
+updateable            D  False
+uuid                  -  718d0735-c292-4387-bdb1-5bc235d5a112
+vcpus                 D  2
+virt_mode             D  pvh
+visible_gateway       D  10.137.0.5
+visible_gateway6      D  
+visible_ip            D  10.137.0.10
+visible_ip6           D  
+visible_netmask       D  255.255.255.255
+xid                   D  -1

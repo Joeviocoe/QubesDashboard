@@ -1,0 +1,50 @@
+{
+  "name": "QubesDashboard",
+  "version": "1.0.0",
+  "description": "A Graphical Dashboard for the common management of Qubes 4.0",
+  "license": "MIT",
+  "author": {
+    "name": "Joeviocoe",
+    "email": "Joeviocoe@electron.com"
+  },
+  "main": "main.js",
+  "repository": "https://github.com/Joeviocoe/QubesDashboard",
+  "keywords": [
+    "Qubes",
+    "Dashboard",
+    "management",
+    "manager"
+  ],
+  "devDependencies": {
+    "electron": "^1.8.2",
+    "electron-builder": "^20.1.1"
+  },
+  "dependencies": {
+    "electron-prompt": "^0.5.0",
+    "jquery": "^3.3.1",
+    "jsplumb": "^2.6.8",
+    "shelljs": "^0.8.1",
+    "spectrum-colorpicker": "^1.8.0"
+  },
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "start": "electron .",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "build": {
+    "appId": "com.electron.qubesdashboard",
+    "productName": "QubesDashboard",
+    "copyright": "Copyright © 2018 Joeviocoe",
+    "extraResources": "imgfiles",
+    "linux": {
+      "description": "A Graphical Dashboard for the common management of Qubes 4.0",
+      "category": "Utility",
+      "icon": "build/icons/",
+      "target": [
+        "AppImage",
+        "rpm"
+      ]
+    }
+  }
+}

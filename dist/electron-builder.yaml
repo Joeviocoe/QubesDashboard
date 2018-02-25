@@ -1,0 +1,15 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.electron.qubesdashboard
+productName: QubesDashboard
+copyright: Copyright © 2018 Joeviocoe
+extraResources: imgfiles
+linux:
+  description: A Graphical Dashboard for the common management of Qubes 4.0
+  category: Utility
+  icon: build/icons/
+  target:
+    - AppImage
+    - rpm
+electronVersion: 1.8.2

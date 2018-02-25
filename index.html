@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Qubes Dashboard</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <div class="container">
+    <div id="setTheme" class="hidden">
+      <img id="bgimage"></img>
+      <input id="bgcolor"></input>
+      <input id="txtcolor"></input>
+      <button id=cancel type="submit">Cancel</button>
+      <button id=save type="submit">Save</button>
+    </div>
+  </div>
+  <script>window.$ = window.jQuery = require('jquery')</script>
+  <script>require('spectrum-colorpicker')</script>
+  <script>require('jsplumb')</script>
+  <script>require('./render.js')</script>
+</body>
+</html>

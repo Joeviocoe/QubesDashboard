@@ -1,0 +1,90 @@
+@import url("node_modules/spectrum-colorpicker/spectrum.css");
+
+body {
+    user-select: none;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.container {
+    margin: inherit;
+    width: inherit;
+    height: inherit;
+}
+
+#setTheme {
+    float: left;
+    padding-left: 25px;
+    padding-right: 25px;
+    background-color: white;
+    color: black;
+}
+
+#setTheme > span,input,button {
+    margin: 10px;
+    margin-top: 6px;
+    vertical-align: top;
+    width: 80px;
+}
+
+#setTheme > span {
+    margin-right: 60px;
+}
+
+.hidden {
+  height: 0px;
+  overflow: hidden;
+}
+
+.vm {
+    position: absolute;
+    text-align: center;
+    font-size: 16px;
+    height: 10vh; width: 10vh;
+    text-shadow: 2px 2px 5px black;
+}
+
+.cubeicon {
+    width: 100%; height: 100%;
+    transform: scale(1.0);
+    transition: all .5s ease-in-out;
+    filter: drop-shadow(5px 5px 5px black);
+}
+.cubeicon:hover {
+    transform: scale(1.2);
+}
+
+.activeVM {
+    //border: 3px solid blue;
+}
+
+.inactiveVM {
+    opacity: 1;
+}
+
+.updatableVM {
+    border: 4px solid red;
+    animation:blink 2s linear infinite;
+}
+.transientVM {
+    animation:blink .2s linear infinite;
+}
+@keyframes blink {
+      0% { opacity: 1.00; }
+     25% { opacity: 0.60; }
+     50% { opacity: 0.30; }
+     75% { opacity: 0.10; }
+    100% { opacity: 1.00; }
+}
+
+.shake:hover {
+    animation:shake .2s linear infinite;
+}
+@keyframes shake {
+    0% { transform:rotate( 0deg); }
+   25% { transform:rotate(-5deg); }
+   50% { transform:rotate( 0deg); }
+   75% { transform:rotate( 5deg); }
+  100% { transform:rotate( 0deg); }
+}

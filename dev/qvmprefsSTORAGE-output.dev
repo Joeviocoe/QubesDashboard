@@ -1,0 +1,38 @@
+autostart             D  False
+backup_timestamp      U
+debug                 D  False
+default_dispvm        -  fedora-25-dvm
+default_user          D  user
+gateway               D  
+gateway6              D  
+include_in_backups    D  True
+installed_by_rpm      D  False
+ip                    D  
+ip6                   D  
+kernel                D  4.14.18-1
+kernelopts            D  nopat
+klass                 D  AppVM
+label                 -  purple
+mac                   D  00:16:3E:5E:6C:00
+maxmem                D  4000
+memory                D  400
+name                  -  STORAGE
+netvm                 -  None
+provides_network      D  False
+qid                   -  23
+qrexec_timeout        D  60
+start_time            D  
+stubdom_mem           U
+stubdom_xid           D  -1
+template              -  debian-9
+template_for_dispvms  D  False
+updateable            D  False
+uuid                  -  30418c3e-7217-4169-a89c-e77eacb817a8
+vcpus                 D  2
+virt_mode             D  pvh
+visible_gateway       D  
+visible_gateway6      D  
+visible_ip            D  
+visible_ip6           D  
+visible_netmask       D  
+xid                   D  -1

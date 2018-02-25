@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=QubesDashboard
+Comment=A Graphical Dashboard for the common management of Qubes 4.0
+Exec=AppRun
+Terminal=false
+Type=Application
+Icon=qubesdashboard
+X-AppImage-Version=1.0.0
+X-AppImage-BuildId=6a0fd020-1a05-11a8-045d-abab3c5fcbb5
+Categories=Utility;

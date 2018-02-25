@@ -1,0 +1,36 @@
+autostart           D  False
+backup_timestamp    U
+debug               D  False
+default_dispvm      D  fedora-25-dvm
+default_user        D  user
+gateway             D  
+gateway6            D  
+include_in_backups  D  True
+installed_by_rpm    D  False
+ip                  D  10.137.0.3
+ip6                 D  
+kernel              D  4.14.18-1
+kernelopts          D  nopat
+klass               D  TemplateVM
+label               -  gray
+mac                 D  00:16:3E:5E:6C:00
+maxmem              D  4000
+memory              D  400
+name                -  whonix-gw
+netvm               -  sys-net
+provides_network    D  False
+qid                 -  3
+qrexec_timeout      D  60
+start_time          D  
+stubdom_mem         U
+stubdom_xid         D  -1
+updateable          D  True
+uuid                -  84132519-a91b-4a6b-b30f-b78b3213fae8
+vcpus               D  2
+virt_mode           D  pvh
+visible_gateway     D  10.137.0.5
+visible_gateway6    D  
+visible_ip          D  10.137.0.3
+visible_ip6         D  
+visible_netmask     D  255.255.255.255
+xid                 D  -1
