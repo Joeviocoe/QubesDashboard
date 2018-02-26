@@ -179,6 +179,7 @@ function drawVMs() {
     }
   }
   refreshVMs();
+  eventListeners();
 }
 
 /// Update VM status on board
@@ -237,6 +238,8 @@ function saveVMpositions() {
       if (err) throw err;
     })
   }
+  $('.vm').css('left','').css('top','');
+  loadcssfile(vms_css);
 }
 
 /// Check for available updates for TemplateVMs
@@ -245,7 +248,7 @@ function checkUpdates() {
   for ( vm in VMs ) {
     if ( VMs[vm]['updates-available'] == 1 ) {
       $('#'+vm).addClass('updatableVM');
-      console.log(vm + ':\t\t\t has an update available');
+      console.log('Update Available for: ' + vm);
     }
   }
 }
@@ -549,13 +552,11 @@ function eventListeners() {
     menu_body.clear(); createMenu_background();
     menu_body.popup(remote.getCurrentWindow());
   })
-
   $('.vm').contextmenu(function(e) {
     e.stopPropagation();
     menu_vm.clear(); createMenu_VM(e);
     menu_vm.popup(remote.getCurrentWindow());
   });
-
   $('.vm').click(function(e) {
     if ( moving == 0 ) {
       menu_apps.clear(); createMenu_Apps(e);
