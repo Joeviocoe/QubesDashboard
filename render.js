@@ -42,15 +42,6 @@ console.log(
   '\nUserPath: ' + userDataPath
 );
 
-/// Load additional css files
-function loadcssfile(filePath) {
-  $("<link/>", {
-     rel: "stylesheet",
-     type: "text/css",
-     href: filePath
-  }).appendTo("head");
-}
-
 /// Run a command on host system
 function run(cmd,stream,dest,opt) {
   var output = "";
@@ -88,21 +79,14 @@ function run(cmd,stream,dest,opt) {
   return output.toString().trim();
 }
 
-/*
-  exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
-  output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
-
-  if ( devenv == 1 && opt != 'local' ) {
-    try {
-      exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
-      output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
-    } catch (err) {
-      err.stderr; err.pid; err.signal; err.status; console.error(err);
-    }
-  } else
-  return output.toString().trim();
+/// Load additional css files
+function loadcssfile(filePath) {
+  $("<link/>", {
+     rel: "stylesheet",
+     type: "text/css",
+     href: filePath
+  }).appendTo("head");
 }
-*/
 
 /// Create Snap Grid
 var vert_int = window.innerHeight / 50;
@@ -235,11 +219,10 @@ function saveVMpositions() {
     var top  = (elem.css('top').split('px')[0] / window.innerHeight * 100).toFixed(0) + '%';
     var line = '#' + id + ' { left: '+ left + '; top: ' + top + '; }\n'
     fs.appendFile(vms_css,line,function(err) {
-      if (err) throw err;
-    })
+      if (err) console.error(err);
+    });
   }
-  $('.vm').css('left','').css('top','');
-  loadcssfile(vms_css);
+  location.reload();
 }
 
 /// Check for available updates for TemplateVMs
@@ -258,6 +241,7 @@ function checkUpdates() {
 /// THEME CONTROL
 var bgimage = bgimage_file, bgcolor, txtcolor;
 
+/// Initial setup of Theme files
 function initializeTheme() {
   if ( !fs.existsSync(vms_css) ) {
     fs.writeFileSync(vms_css,'');
@@ -389,16 +373,18 @@ function saveTheme(bgimage,bgcolor,txtcolor) {
     run('cp -vf "'+bgimage+'" "'+bgimage_file+'"','async','local');
   }
   fs.writeFileSync(theme_css,css,function(err) {
-    if (err) throw err;
+    if (err) console.error(err);
   });
   themeInvert();
 }
 
 ///////////////////////////////////////////////////////////////////
 
+/// CONTEXT MENUs
+var label_move = "Unlock VM icons", icon_move = imgPath+'lock1.png';
+
 /// Create context menu: body
 const menu_body = new Menu()
-var label_move = "Unlock VM icons", icon_move = imgPath+'lock1.png'
 function createMenu_background() {
   menu_body.append(new MenuItem({
       label: label_move,
