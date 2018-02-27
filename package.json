@@ -23,7 +23,6 @@
     "electron-prompt": "^0.5.0",
     "jquery": "^3.3.1",
     "jsplumb": "^2.6.8",
-    "shelljs": "^0.8.1",
     "spectrum-colorpicker": "^1.8.0"
   },
   "scripts": {

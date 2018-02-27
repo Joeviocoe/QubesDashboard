@@ -23,7 +23,8 @@ function createWindow () {
     icon: 'images/qubes.png',
     transparent: false,
     frame: true,
-    toolbar: true
+    toolbar: true,
+    webPreferences: { nodeIntegrationInWorker: true }
   })
 
   // Load the index.html of the app.

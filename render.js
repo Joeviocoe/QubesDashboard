@@ -10,17 +10,6 @@ const store = new Store({
   configName: 'user-preferences'
 });
 
-/// F12 to open/close Dev Tools Console, F5 to Refresh
-function bindDevConsole() {
-  document.addEventListener("keydown", function (e) {
-    if (e.which === 123) {
-      remote.getCurrentWindow().toggleDevTools();
-    } else if (e.which === 116) {
-      location.reload();
-    }
-  });
-}
-
 /// Set file paths
 var resourcePath = process.resourcesPath;
 var imgPath = resourcePath + '/imgfiles/';
@@ -30,44 +19,49 @@ var vms_css = userDataPath+'/vms.css';
 var theme_css = userDataPath+'/theme.css';
 var bgimage_file = userDataPath+'/background.jpg'
 
+/// Define Workers
+//execWorker = new Worker("exec_worker.js");
+lsWorker = new Worker("qvm-ls_worker.js");
+prefWorker = new Worker("qvm-pref_worker.js");
+featWorker = new Worker("qvm-feat_worker.js");
+
 /// Set environment
 var host = execSync('hostname').toString().trim();
 if ( !fs.existsSync(cmdDataCache) ) { execSync('mkdir '+cmdDataCache); }
-if ( host == "dom0" ) { var devenv = 0; } else { var devenv = 1; }
-console.log(
-  "============>\tQubes Dashboard running on " + host + " mode " + devenv +
-  '\nImagePath: ' + imgPath +
-  '\nResourcePath: ' + resourcePath +
-  '\nDataCache: ' + cmdDataCache +
-  '\nUserPath: ' + userDataPath
-);
+if ( host == "dom0" ) { var dev = 0; } else { var dev = 1; }
+console.log("============>\tQubes Dashboard running on " + host);
 
 /// Run a command on host system
-function run(cmd,stream,dest,opt) {
+
+/*
+function X(cmd) {
+  execWorker.postMessage(cmd);
+}
+*/
+/*
+function runX(cmd,direction,destination,opt) {
   var output = "";
   if ( opt != 'quiet' ) { console.log('Running: ' + cmd) }
   var cmdname = cmd.replace(/\W/g,'-').substring(0,31);
   try {
     if        ( devenv == 0 ) {
-      if        ( stream == 'async' ) {
-        exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
-        output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
-      } else if ( stream == 'sync' ) {
+      if        ( direction == '>>' ) {
+        execWorker.postMessage(cmd);
+      } else if ( direction == '<->' ) {
         output = execSync(cmd);
       }
     } else if ( devenv == 1 ) {
-      if        ( stream == 'async' ) {
-        if        ( dest == 'local' ) {
-          exec(cmd+' > '+cmdDataCache+cmdname+'-output.dev');
-          output = fs.readFileSync(cmdDataCache+cmdname+'-output.dev');
-        } else if ( dest == 'remote' ) {
+      if        ( direction == '>>' ) {
+        if        ( destination == 'local' ) {
+          execWorker.postMessage(cmd);
+        } else if ( destination == 'remote' ) {
           exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
           output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
         }
-      } else if ( stream == 'sync' ) {
-        if        ( dest == 'local' ) {
+      } else if ( direction == '<->' ) {
+        if        ( destination == 'local' ) {
           output = execSync(cmd);
-        } else if ( dest == 'remote' ) {
+        } else if ( destination == 'remote' ) {
           exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
           output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
         }
@@ -77,6 +71,18 @@ function run(cmd,stream,dest,opt) {
     err.stderr; err.pid; err.signal; err.status; //console.error(err);
   }
   return output.toString().trim();
+}
+*/
+
+/// F12 to open/close Dev Tools Console, F5 to Refresh
+function bindDevConsole() {
+  document.addEventListener("keydown", function (e) {
+    if (e.which === 123) {
+      remote.getCurrentWindow().toggleDevTools();
+    } else if (e.which === 116) {
+      location.reload();
+    }
+  });
 }
 
 /// Load additional css files
@@ -102,17 +108,23 @@ function randomIntFromInterval(min,max) {
 ///////////////////////////////////////////////////////////////////
 var VMs = {};
 
-/// Get updated info from qvm-ls
-function getVMs() {
-  var ls = run('qvm-ls','async','remote','quiet',);
-  var head = ls.split('\n')[0].toString().split(/\s+/g);
-  var qvm_ls = ls.split('\n'); qvm_ls.shift()
-  buildVMs(head,qvm_ls);
+/// Query list of VMs with Preferences/Features
+function getVMs(int) {
+  lsWorker.postMessage({'int':int,'dev':dev});
+}
+function getPrefs(int){
+  prefWorker.postMessage({'int':int,'dev':dev});
+}
+function getFeats(int){
+  featWorker.postMessage({'int':int,'dev':dev});
 }
 
-/// Create object array with all VMs with basic attributes
-function buildVMs(header,list) {
-  list.forEach(function (item) {
+/// Receive list of VMs with Preferences/Features
+lsWorker.onmessage = function(e) {
+  var ls = e.data;
+  var header = ls.split('\n')[0].toString().split(/\s+/g);
+  var qvm_ls = ls.split('\n'); qvm_ls.shift()
+  qvm_ls.forEach(function (item) {
     var item = item.split(/\s+/g);
     if ( item[0] != '' ) {
       VMs[item[0]] = new Object();
@@ -120,15 +132,35 @@ function buildVMs(header,list) {
         VMs[item[0]][header[index]] = val;
       });
     }
-  })
-  return VMs;
+  });
+  if ( $('.vm').length == 0 ) {
+    drawVMs();
+  } else {
+    refreshVMs();
+  }
+}
+prefWorker.onmessage = function(e) {
+  var prefs = e.data.split('\n');
+  prefs.forEach(function (item) {
+    var item = item.split(/\s+/g);
+    VMs[item[0]][item[1]] = item[3];
+  });
+}
+featWorker.onmessage = function(e) {
+  var feats = e.data.split('\n');
+  feats.forEach(function (item) {
+    var item = item.split(/\s+/g);
+    if ( item[2] === undefined ) { item[2] = 0; }
+    VMs[item[0]][item[1]] = item[2];
+  });
+  checkUpdates();
 }
 
-/// Add preference/feature attributes to VM object array
+/*
 function buildAttributes() {
     Object.keys(VMs).forEach(function (vm) {
-      var prefs = run('qvm-prefs ' + vm,'async','remote','quiet').split('\n');
-      var features = run('qvm-features ' + vm,'async','remote','quiet').split('\n');
+      var prefs = runX('qvm-prefs ','quiet').split('\n');
+      var features = runX('qvm-features ','quiet').split('\n');
       prefs.forEach(function (item) {
         var item = item.split(/\s+/g);
         VMs[vm][item[0]] = item[2];
@@ -144,9 +176,10 @@ function buildAttributes() {
 
 /// Get Devices
 function buildDevices() {
-  //var usb = run('qvm-usb','async','remote','quiet');
-  //var pci = run('qvm-pci','async','remote','quiet');
+  var usb = runX('qvm-usb','>>','remote','quiet');
+  var pci = runX('qvm-pci','>>','remote','quiet');
 }
+*/
 
 /// Set the board with VMs
 function drawVMs() {
@@ -162,13 +195,13 @@ function drawVMs() {
       $('#'+vm).css("top",randomIntFromInterval(bottom-vert_int,top)+'px');
     }
   }
-  refreshVMs();
   eventListeners();
+  refreshVMs();
+  themeInvert();
 }
 
 /// Update VM status on board
 function refreshVMs() {
-  getVMs();
   for ( vm in VMs ) {
     var state = VMs[vm]['STATE'];
     if ( state == 'Running' && $('#'+vm+':not(.activeVM').length > 0 ) {
@@ -303,7 +336,7 @@ function selectBackground() {
     function (file) {
       if ( file !== undefined ) {
         file = '"'+file+'"';
-        var type = run('file '+file,'sync','local').split(': ')[1];
+        var type = execSync('file '+file).toString().split(': ')[1];
         if ( type.indexOf('image') !== -1 ) {
           console.log('Changing Background\nFrom:\t' + bgimage + '\nTo:\t\t' + file + '\nType:\t' + type);
           var temp = $('body').css('background-image').replace(bgimage.replace(/"/g,''),file.replace(/"/g,''));
@@ -355,6 +388,11 @@ function themeInvert() {
         var lightimg = $(this).attr('src').replace('black','white');
         $(this).attr('src',lightimg);
       });
+    } else if ( brightness >= 128 ) {
+      $('img.cubeicon[src*="white"]').each(function() {
+        var lightimg = $(this).attr('src').replace('white','black');
+        $(this).attr('src',lightimg);
+      });
     }
   });
 }
@@ -370,7 +408,7 @@ function saveTheme(bgimage,bgcolor,txtcolor) {
     }\n\
   "
   if ( bgimage.replace(/"/g,'') != bgimage_file.replace(/"/g,'') ) {
-    run('cp -vf "'+bgimage+'" "'+bgimage_file+'"','async','local');
+    execSync('cp -vf "'+bgimage+'" "'+bgimage_file+'"');
   }
   fs.writeFileSync(theme_css,css,function(err) {
     if (err) console.error(err);
@@ -381,7 +419,8 @@ function saveTheme(bgimage,bgcolor,txtcolor) {
 ///////////////////////////////////////////////////////////////////
 
 /// CONTEXT MENUs
-var label_move = "Unlock VM icons", icon_move = imgPath+'lock1.png';
+var label_move = "Unlock VM icons";
+var icon_move = imgPath+'lock1.png';
 
 /// Create context menu: body
 const menu_body = new Menu()
@@ -415,7 +454,7 @@ function createMenu_VM(e) {
       label: 'Start Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-start ' + vm,'async','remote')
+        exec('qvm-start ' + vm);
       }
     }))
   } else if ( state == 'Running' || state == 'Paused' ) {
@@ -423,7 +462,7 @@ function createMenu_VM(e) {
       label: 'Shutdown Qube',
       //icon:  icon_move,
       click: function () {
-        run('qvm-shutdown --wait ' + vm,'async','remote')
+        exec('qvm-shutdown --wait ' + vm);
       }
     }))
   }
@@ -433,7 +472,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Pausing VM: " + vm);
-        run('qvm-pause ' + vm,'async','remote')
+        exec('qvm-pause ' + vm);
       }
     }))
   }
@@ -443,7 +482,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Unpausing VM: " + vm);
-        run('qvm-unpause ' + vm,'async','remote')
+        exec('qvm-unpause ' + vm);
       }
     }))
   }
@@ -453,7 +492,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Restarting VM: " + vm);
-        run('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm,'async','remote')
+        exec('qvm-shutdown --wait ' + vm + ' ; sleep 5 ; qvm-start ' + vm);
       }
     }))
   }
@@ -464,7 +503,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Killing VM: " + vm);
-        run('qvm-kill ' + vm,'async','remote')
+        exec('qvm-kill ' + vm);
       }
     }))
   }
@@ -476,22 +515,22 @@ function createMenu_VM(e) {
       {
         label: 'Basic Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab basic ' + vm,'async','remote') }
+        click: function () { exec('qubes-vm-settings --tab basic ' + vm) }
       },
       {
         label: 'Advanced Settings',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab advanced ' + vm,'async','remote') }
+        click: function () { exec('qubes-vm-settings --tab advanced ' + vm) }
       },
       {
         label: 'Firewall Rules',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab firewall ' + vm,'async','remote') }
+        click: function () { exec('qubes-vm-settings --tab firewall ' + vm) }
       },
       {
         label: 'Applications',
         //icon:  icon_move,
-        click: function () { run('qubes-vm-settings --tab applications ' + vm,'async','remote') }
+        click: function () { exec('qubes-vm-settings --tab applications ' + vm) }
       }
     ]
   }))
@@ -501,7 +540,7 @@ function createMenu_VM(e) {
       //icon:  icon_move,
       click: function () {
         console.log("Updating VM: " + vm);
-        run('qvm-run --service ' + vm + ' qubes.InstallUpdatesGUI')
+        exec('qvm-run --service ' + vm + ' qubes.InstallUpdatesGUI')
       }
     }))
   }
@@ -511,15 +550,14 @@ function createMenu_VM(e) {
 const menu_apps = new Menu()
 function createMenu_Apps(e) {
   var vm = $(e.target).parent('.vm').attr('id');
-  console.log(vm + ' - Creating App List for VM');
-  getActiveWindow();
+  //console.log(vm + ' - Creating App List for VM');
 }
 
 ///////////////////////////////////////////////////////////////////
-
+/*
 function getActiveWindow() {
-  var xprop = run(
-    "xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME",'remote','async'
+  var xprop = runX(
+    "xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME",'remote','>>'
   );
   try {
     var win = xprop.split(' = ')[1];
@@ -528,7 +566,7 @@ function getActiveWindow() {
       err.stderr; err.pid; err.signal; err.status; console.error(err);
   }
 }
-
+*/
 ///////////////////////////////////////////////////////////////////
 
 /// Set Click Event Listeners
@@ -549,7 +587,7 @@ function eventListeners() {
       menu_apps.popup(remote.getCurrentWindow());
     }
   });
-  $('#bgimage').click(function(e) {
+  $('#bgimage').click(function() {
     selectBackground();
   });
   $('#cancel').click(function() {
@@ -619,20 +657,6 @@ function templateConnections() {
 
 ///////////////////////////////////////////////////////////////////
 
-function heartbeat1(int) {
-  setInterval( function() {
-    if ( $('.vm').length == 0 ) { getVMs(); drawVMs(); }
-    refreshVMs();
-  },int)
-}
-
-function heartbeat2(int) {
-  setInterval( function() {
-    buildAttributes();
-    checkUpdates();
-  },int)
-}
-
 ///////////////////////////////
 /////////// MAIN RUN //////////
 ///////////////////////////////
@@ -640,15 +664,11 @@ function heartbeat2(int) {
 jsPlumb.ready(function() {
   bindDevConsole();
   initializeTheme();
-  loadcssfile(vms_css); loadcssfile(theme_css);
-  getVMs();
-  drawVMs();
-  refreshVMs();
-  themeInvert();
+  loadcssfile(vms_css);
+  loadcssfile(theme_css);
   //netvmConnections();
   //templateConnections();
-  eventListeners();
-  heartbeat1(5000);
-  heartbeat2(60000);
-
+  getVMs(3000);
+  getPrefs(10000);
+  getFeats(10000);
 });
