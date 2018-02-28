@@ -75,8 +75,7 @@ body {
 }
 
 .updatableVM {
-    border: 4px solid red;
-    animation:blink 2s linear infinite;
+    filter: drop-shadow(10px 10px 10px black);
 }
 .transientVM {
     animation:blink .2s linear infinite;

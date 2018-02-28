@@ -31,49 +31,6 @@ if ( !fs.existsSync(cmdDataCache) ) { execSync('mkdir '+cmdDataCache); }
 if ( host == "dom0" ) { var dev = 0; } else { var dev = 1; }
 console.log("============>\tQubes Dashboard running on " + host);
 
-/// Run a command on host system
-
-/*
-function X(cmd) {
-  execWorker.postMessage(cmd);
-}
-*/
-/*
-function runX(cmd,direction,destination,opt) {
-  var output = "";
-  if ( opt != 'quiet' ) { console.log('Running: ' + cmd) }
-  var cmdname = cmd.replace(/\W/g,'-').substring(0,31);
-  try {
-    if        ( devenv == 0 ) {
-      if        ( direction == '>>' ) {
-        execWorker.postMessage(cmd);
-      } else if ( direction == '<->' ) {
-        output = execSync(cmd);
-      }
-    } else if ( devenv == 1 ) {
-      if        ( direction == '>>' ) {
-        if        ( destination == 'local' ) {
-          execWorker.postMessage(cmd);
-        } else if ( destination == 'remote' ) {
-          exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
-          output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
-        }
-      } else if ( direction == '<->' ) {
-        if        ( destination == 'local' ) {
-          output = execSync(cmd);
-        } else if ( destination == 'remote' ) {
-          exec('echo "'+cmd+'" > '+cmdDataCache+cmdname+'-input.dev');
-          output = execSync('cat '+cmdDataCache+cmdname+'-output.dev');
-        }
-      }
-    }
-  } catch (err) {
-    err.stderr; err.pid; err.signal; err.status; //console.error(err);
-  }
-  return output.toString().trim();
-}
-*/
-
 /// F12 to open/close Dev Tools Console, F5 to Refresh
 function bindDevConsole() {
   document.addEventListener("keydown", function (e) {
@@ -157,27 +114,10 @@ featWorker.onmessage = function(e) {
 }
 
 /*
-function buildAttributes() {
-    Object.keys(VMs).forEach(function (vm) {
-      var prefs = runX('qvm-prefs ','quiet').split('\n');
-      var features = runX('qvm-features ','quiet').split('\n');
-      prefs.forEach(function (item) {
-        var item = item.split(/\s+/g);
-        VMs[vm][item[0]] = item[2];
-      })
-      features.forEach(function (item) {
-        var item = item.split(/\s+/g);
-        if ( item[1] === undefined ) { item[1] = 0; }
-        VMs[vm][item[0]] = item[1];
-      })
-    })
-  return VMs;
-}
-
 /// Get Devices
 function buildDevices() {
-  var usb = runX('qvm-usb','>>','remote','quiet');
-  var pci = runX('qvm-pci','>>','remote','quiet');
+  var usb = execSync('qvm-usb');
+  var pci = execSync('qvm-pci');
 }
 */
 
@@ -189,7 +129,7 @@ function drawVMs() {
     var icon = 'cubes/' + VMs[vm]['LABEL'] + '.png';
     $('div.container').append('<div id='+vm+' class=vm>'+vm+'</div>');
     $('#'+vm).append('<img class=cubeicon src='+icon+'>');
-    $('#dom0').children('img').attr('src','cubes/tesseract.gif');
+    $('#dom0').children('img').attr('src','cubes/white.png');
     if ( vm_positions.indexOf(vm) <= 0 ) {
       $('#'+vm).css("left",randomIntFromInterval(left,right-hori_int)+'px');
       $('#'+vm).css("top",randomIntFromInterval(bottom-vert_int,top)+'px');
