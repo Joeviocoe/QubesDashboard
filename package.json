@@ -1,6 +1,6 @@
 {
   "name": "QubesDashboard",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "A Graphical Dashboard for the common management of Qubes 4.0",
   "license": "MIT",
   "author": {

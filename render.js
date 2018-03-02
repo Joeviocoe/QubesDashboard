@@ -145,7 +145,7 @@ function refreshVMs() {
   for ( vm in VMs ) {
     var state = VMs[vm]['STATE'];
     if ( state == 'Running' && $('#'+vm+':not(.activeVM').length > 0 ) {
-      var gif = $('#'+vm).children('img').attr('src').replace('.png','.gif');
+      var gif = $('#'+vm).children('img').attr('src').replace('.png','.png');
       $('#'+vm).removeClass('activeVM inactiveVM transientVM');
       $('#'+vm).addClass('activeVM').children('img').attr('src',gif);
     }
@@ -609,6 +609,6 @@ jsPlumb.ready(function() {
   //netvmConnections();
   //templateConnections();
   getVMs(3000);
-  getPrefs(10000);
-  getFeats(10000);
+  getFeats(60000);
+  getPrefs(600000);
 });
