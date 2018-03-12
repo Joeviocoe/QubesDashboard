@@ -14,14 +14,16 @@ const store = new Store({
 });
 
 function createWindow () {
+  var resourcePath = process.resourcesPath;
+  var imgPath = resourcePath + '/imgfiles/';
+
   let { x, y, width, height } = store.get('windowBounds');
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    x, y,
-    width, height,
+    x, y, width, height,
     fullscreen: false,
     autoHideMenuBar: false,
-    icon: 'images/qubes.png',
+    icon: imgPath+'qubes_small.png',
     transparent: false,
     frame: true,
     toolbar: true,

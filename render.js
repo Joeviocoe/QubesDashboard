@@ -514,7 +514,6 @@ function createMenu_VM(e) {
 const menu_apps = new Menu()
 function createMenu_Apps(e) {
   var vm = $(e.target).parent('.vm').attr('id');
-  console.log(vm + ' - Creating App List for VM');
   var appfiles = execSync(
     'ls -d ~/.local/share/qubes-appmenus/'+vm+'/apps/*.desktop | grep -v qubes-vm-settings'
   ).toString().split('\n');
@@ -524,9 +523,7 @@ function createMenu_Apps(e) {
       var appname = grep(appinfo,/^Name=/).toString().split(': ')[1];
       var appicon = grep(appinfo,/^Icon=/).toString().split('=')[1];
       var appexec = grep(appinfo,/^Exec=/).toString().split('=')[1];
-      console.log(appicon);
       let appicon_native = nativeImage.createFromPath(appicon.toString().trim());
-      console.log(appicon_native.getSize());
       menu_apps.append(new MenuItem({
         label: appname,
         icon:  appicon_native.resize({height: 30}),
