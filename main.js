@@ -3,7 +3,7 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
-const Store = require('./store.js');
+const Store = require('./store.js')
 let mainWindow
 
 const store = new Store({
@@ -14,9 +14,10 @@ const store = new Store({
 });
 
 function createWindow () {
-  let { width, height } = store.get('windowBounds');
+  let { x, y, width, height } = store.get('windowBounds');
   // Create the browser window.
   mainWindow = new BrowserWindow({
+    x, y,
     width, height,
     fullscreen: false,
     autoHideMenuBar: false,
@@ -37,8 +38,8 @@ function createWindow () {
   mainWindow.webContents.openDevTools()
 
   mainWindow.on('resize', () => {
-    let { width, height } = mainWindow.getBounds();
-    store.set('windowBounds', { width, height });
+    let { x, y, width, height } = mainWindow.getBounds();
+    store.set('windowBounds', { x, y, width, height });
   });
 
   mainWindow.loadURL('file://' + path.join(__dirname, 'index.html'));

@@ -1,8 +1,10 @@
 const {remote} = require('electron');
 const {dialog} = require('electron').remote;
+const nativeImage = require('electron').remote.nativeImage
 const {Menu, MenuItem} = remote
 const prompt = require('electron-prompt');
 const {exec, execSync} = require('child_process');
+//const nativeImage = require('electron').remote.nativeImage;
 const fs = require('fs');
 const Store = require('./store.js');
 
@@ -14,20 +16,18 @@ const store = new Store({
 var resourcePath = process.resourcesPath;
 var imgPath = resourcePath + '/imgfiles/';
 var userDataPath = remote.app.getPath('userData');
-var cmdDataCache = userDataPath+'/datacache/';
 var vms_css = userDataPath+'/vms.css';
 var theme_css = userDataPath+'/theme.css';
 var bgimage_file = userDataPath+'/background.jpg'
 
 /// Define Workers
 //execWorker = new Worker("exec_worker.js");
-lsWorker = new Worker("qvm-ls_worker.js");
-prefWorker = new Worker("qvm-pref_worker.js");
+lsWorker   = new Worker("qvm-ls_worker.js");
 featWorker = new Worker("qvm-feat_worker.js");
+prefWorker = new Worker("qvm-pref_worker.js");
 
 /// Set environment
 var host = execSync('hostname').toString().trim();
-if ( !fs.existsSync(cmdDataCache) ) { execSync('mkdir '+cmdDataCache); }
 if ( host == "dom0" ) { var dev = 0; } else { var dev = 1; }
 console.log("============>\tQubes Dashboard running on " + host);
 
@@ -62,6 +62,13 @@ function randomIntFromInterval(min,max) {
     return Math.floor(Math.random()*(max-min+1)+min);
 }
 
+/// Grep by Regex
+function grep(arr,regex) {
+  return $.grep(arr, function(elem) {
+  	return elem.match(regex) != null;
+  });
+}
+
 ///////////////////////////////////////////////////////////////////
 var VMs = {};
 
@@ -69,11 +76,11 @@ var VMs = {};
 function getVMs(int) {
   lsWorker.postMessage({'int':int,'dev':dev});
 }
-function getPrefs(int){
-  prefWorker.postMessage({'int':int,'dev':dev});
-}
 function getFeats(int){
   featWorker.postMessage({'int':int,'dev':dev});
+}
+function getPrefs(int){
+  prefWorker.postMessage({'int':int,'dev':dev});
 }
 
 /// Receive list of VMs with Preferences/Features
@@ -84,7 +91,7 @@ lsWorker.onmessage = function(e) {
   qvm_ls.forEach(function (item) {
     var item = item.split(/\s+/g);
     if ( item[0] != '' ) {
-      VMs[item[0]] = new Object();
+      if ( VMs[item[0]] === undefined ) { VMs[item[0]] = new Object(); }
       item.forEach( function (val,index) {
         VMs[item[0]][header[index]] = val;
       });
@@ -96,13 +103,6 @@ lsWorker.onmessage = function(e) {
     refreshVMs();
   }
 }
-prefWorker.onmessage = function(e) {
-  var prefs = e.data.split('\n');
-  prefs.forEach(function (item) {
-    var item = item.split(/\s+/g);
-    VMs[item[0]][item[1]] = item[3];
-  });
-}
 featWorker.onmessage = function(e) {
   var feats = e.data.split('\n');
   feats.forEach(function (item) {
@@ -111,6 +111,13 @@ featWorker.onmessage = function(e) {
     VMs[item[0]][item[1]] = item[2];
   });
   checkUpdates();
+}
+prefWorker.onmessage = function(e) {
+  var prefs = e.data.split('\n');
+  prefs.forEach(function (item) {
+    var item = item.split(/\s+/g);
+    VMs[item[0]][item[1]] = item[3];
+  });
 }
 
 /*
@@ -121,11 +128,25 @@ function buildDevices() {
 }
 */
 
+/// Get the state of the VM
+function getState(vm) {
+  if (
+    VMs[vm]['STATE'] == 'Transient' &&
+    VMs[vm]['CLASS'] == 'StandaloneVM' &&
+    VMs[vm]['qrexec'] != '1'
+  ) {
+    var state = 'Running';
+  } else {
+    var state = VMs[vm]['STATE'];
+  }
+  return state
+}
+
 /// Set the board with VMs
 function drawVMs() {
+  console.log(VMs);
   var vm_positions = fs.readFileSync(vms_css, 'utf8');
   for ( vm in VMs ) {
-    //console.log(VMs[vm]);
     var icon = 'cubes/' + VMs[vm]['LABEL'] + '.png';
     $('div.container').append('<div id='+vm+' class=vm>'+vm+'</div>');
     $('#'+vm).append('<img class=cubeicon src='+icon+'>');
@@ -143,20 +164,24 @@ function drawVMs() {
 /// Update VM status on board
 function refreshVMs() {
   for ( vm in VMs ) {
-    var state = VMs[vm]['STATE'];
+    var state = getState(vm);
     if ( state == 'Running' && $('#'+vm+':not(.activeVM').length > 0 ) {
       var gif = $('#'+vm).children('img').attr('src').replace('.png','.png');
-      $('#'+vm).removeClass('activeVM inactiveVM transientVM');
+      $('#'+vm).removeClass('activeVM inactiveVM transientVM pausedVM');
       $('#'+vm).addClass('activeVM').children('img').attr('src',gif);
     }
     if ( state == 'Halted' && $('#'+vm+':not(.inactiveVM').length > 0 ) {
       var png = $('#'+vm).children('img').attr('src').replace('.gif','.png');
-      $('#'+vm).removeClass('activeVM inactiveVM transientVM');
+      $('#'+vm).removeClass('activeVM inactiveVM transientVM pausedVM');
       $('#'+vm).addClass('inactiveVM').children('img').attr('src',png);
     }
     if ( state == 'Transient' && $('#'+vm+':not(.transientVM').length > 0 ) {
-      $('#'+vm).removeClass('activeVM inactiveVM transientVM');
+      $('#'+vm).removeClass('activeVM inactiveVM transientVM pausedVM');
       $('#'+vm).addClass('transientVM');
+    }
+    if ( state == 'Paused' && $('#'+vm+':not(.transientVM').length > 0 ) {
+      $('#'+vm).removeClass('activeVM inactiveVM transientVM pausedVM');
+      $('#'+vm).addClass('pausedVM');
     }
   }
 }
@@ -200,11 +225,11 @@ function saveVMpositions() {
 
 /// Check for available updates for TemplateVMs
 function checkUpdates() {
-  $('#'+vm).removeClass('updatableVM');
+  $('.vm').removeClass('updatableVM');
   for ( vm in VMs ) {
     if ( VMs[vm]['updates-available'] == 1 ) {
       $('#'+vm).addClass('updatableVM');
-      console.log('Update Available for: ' + vm);
+      //console.log('Update Available for: ' + vm);
     }
   }
 }
@@ -366,10 +391,10 @@ var icon_move = imgPath+'lock1.png';
 const menu_body = new Menu()
 function createMenu_background() {
   menu_body.append(new MenuItem({
-      label: label_move,
-      icon:  icon_move,
-      click: function () { toggleMove(); }
-    }))
+    label: label_move,
+    icon:  icon_move,
+    click: function () { toggleMove(); }
+  }))
   menu_body.append(new MenuItem({type: 'separator'}))
   menu_body.append(new MenuItem({
     label: "Theme Settings",
@@ -387,8 +412,7 @@ function createMenu_background() {
 const menu_vm = new Menu()
 function createMenu_VM(e) {
   var vm = $(e.target).parent('.vm').attr('id');
-  var state = VMs[vm]['STATE'];
-
+  var state = getState(vm);
   if ( state == 'Halted' ) {
     menu_vm.append(new MenuItem({
       label: 'Start Qube',
@@ -418,7 +442,7 @@ function createMenu_VM(e) {
   }
   if ( state == 'Paused' ) {
     menu_vm.append(new MenuItem({
-      label: 'Unpause Qube',
+      label: 'Resume Qube',
       //icon:  icon_move,
       click: function () {
         console.log("Unpausing VM: " + vm);
@@ -490,7 +514,29 @@ function createMenu_VM(e) {
 const menu_apps = new Menu()
 function createMenu_Apps(e) {
   var vm = $(e.target).parent('.vm').attr('id');
-  //console.log(vm + ' - Creating App List for VM');
+  console.log(vm + ' - Creating App List for VM');
+  var appfiles = execSync(
+    'ls -d ~/.local/share/qubes-appmenus/'+vm+'/apps/*.desktop | grep -v qubes-vm-settings'
+  ).toString().split('\n');
+  appfiles.forEach(function(appfile) {
+    if ( appfile != '' ) {
+      var appinfo = execSync('cat '+appfile).toString().split('\n');
+      var appname = grep(appinfo,/^Name=/).toString().split(': ')[1];
+      var appicon = grep(appinfo,/^Icon=/).toString().split('=')[1];
+      var appexec = grep(appinfo,/^Exec=/).toString().split('=')[1];
+      console.log(appicon);
+      let appicon_native = nativeImage.createFromPath(appicon.toString().trim());
+      console.log(appicon_native.getSize());
+      menu_apps.append(new MenuItem({
+        label: appname,
+        icon:  appicon_native.resize({height: 30}),
+        click: function () {
+          console.log('Running: ' + appexec)
+          exec(appexec)
+        }
+      }))
+    }
+  });
 }
 
 ///////////////////////////////////////////////////////////////////

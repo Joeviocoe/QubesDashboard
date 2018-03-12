@@ -1,6 +1,6 @@
 {
   "name": "QubesDashboard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A Graphical Dashboard for the common management of Qubes 4.0",
   "license": "MIT",
   "author": {
@@ -40,10 +40,7 @@
       "description": "A Graphical Dashboard for the common management of Qubes 4.0",
       "category": "Utility",
       "icon": "build/icons/",
-      "target": [
-        "AppImage",
-        "rpm"
-      ]
+      "target": ["rpm"]
     }
   }
 }
