@@ -13,6 +13,17 @@ body {
     height: inherit;
 }
 
+.DEV_container {
+    padding-top: 10vh;
+    padding-left: 3vw;
+    width: 10vw;
+}
+
+.DEV_container > img {
+    width: 5vw;
+    left: 5vw;
+}
+
 #setTheme {
     float: left;
     padding-left: 25px;
@@ -99,4 +110,16 @@ body {
    50% { transform:rotate( 0deg); }
    75% { transform:rotate( 5deg); }
   100% { transform:rotate( 0deg); }
+}
+
+.device {
+    visibility: hidden;
+    height: 0px;
+    width: 0px;
+}
+
+.DEV_container:hover > .device {
+    visibility: visible;
+    height: auto;
+    width: 80vw;
 }

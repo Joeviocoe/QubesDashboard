@@ -4,7 +4,6 @@ const nativeImage = require('electron').remote.nativeImage
 const {Menu, MenuItem} = remote
 const prompt = require('electron-prompt');
 const {exec, execSync} = require('child_process');
-//const nativeImage = require('electron').remote.nativeImage;
 const fs = require('fs');
 const Store = require('./store.js');
 
@@ -47,12 +46,14 @@ function bindDevConsole() {
 }
 
 /// Load additional css files
-function loadcssfile(filePath) {
-  $("<link/>", {
-     rel: "stylesheet",
-     type: "text/css",
-     href: filePath
-  }).appendTo("head");
+function loadcssfiles() {
+  for (var i=0; i < arguments.length; i++) {
+    $("<link/>", {
+       rel: "stylesheet",
+       type: "text/css",
+       href: arguments[i]
+    }).appendTo("head");
+  }
 }
 
 /// Create Snap Grid
@@ -77,13 +78,13 @@ function grep(arr,regex) {
 var VMs = {};
 
 /// Query list of VMs with Preferences/Features
-function getVMs(int) {
+function getVMs() {
   lsWorker.postMessage({'dev':dev});
 }
-function getFeats(int){
+function getFeats() {
   featWorker.postMessage({'dev':dev});
 }
-function getPrefs(int){
+function getPrefs() {
   prefWorker.postMessage({'dev':dev});
 }
 
@@ -96,7 +97,7 @@ lsWorker.onmessage = function(e) {
     var item = item.split(/\s+/g);
     if ( item[0] != '' ) {
       if ( VMs[item[0]] === undefined ) { VMs[item[0]] = new Object(); }
-      item.forEach( function (val,index) {
+      item.forEach(function (val,index) {
         VMs[item[0]][header[index]] = val;
       });
     }
@@ -108,20 +109,24 @@ lsWorker.onmessage = function(e) {
   }
 }
 featWorker.onmessage = function(e) {
-  var feats = e.data.split('\n');
-  feats.forEach(function (item) {
-    var item = item.split(/\s+/g);
-    if ( item[2] === undefined ) { item[2] = 0; }
-    VMs[item[0]][item[1]] = item[2];
-  });
-  checkUpdates();
+  if ( VMs.length > 1 ) {
+    var feats = e.data.split('\n');
+    feats.forEach(function (item) {
+      var item = item.split(/\s+/g);
+      if ( item[2] === undefined ) { item[2] = 0; }
+      VMs[item[0]][item[1]] = item[2];
+    });
+    checkUpdates();
+  }
 }
 prefWorker.onmessage = function(e) {
-  var prefs = e.data.split('\n');
-  prefs.forEach(function (item) {
-    var item = item.split(/\s+/g);
-    VMs[item[0]][item[1]] = item[3];
-  });
+  if ( VMs.length > 1 ) {
+    var prefs = e.data.split('\n');
+    prefs.forEach(function (item) {
+      var item = item.split(/\s+/g);
+      VMs[item[0]][item[1]] = item[3];
+    });
+  }
 }
 
 /// Get the state of the VM
@@ -141,13 +146,13 @@ function getState(vm) {
 /// Set the board with VMs
 function drawVMs() {
   console.log(VMs);
-  var vm_positions = fs.readFileSync(object_css, 'utf8');
+  var obj_positions = fs.readFileSync(object_css, 'utf8');
   for ( vm in VMs ) {
     var icon = 'cubes/' + VMs[vm]['LABEL'] + '.png';
     $('div.container').append('<div id='+vm+' class=vm>'+vm+'</div>');
     $('#'+vm).append('<img class=cubeicon src='+icon+'>');
     $('#dom0').children('img').attr('src','cubes/white.png');
-    if ( vm_positions.indexOf(vm) <= 0 ) {
+    if ( obj_positions.indexOf(vm) <= 0 ) {
       $('#'+vm).css("left",randomIntFromInterval(left,right-hori_int)+'px');
       $('#'+vm).css("top",randomIntFromInterval(bottom-vert_int,top)+'px');
     }
@@ -186,7 +191,7 @@ function refreshVMs() {
 var Devices = {};
 
 /// Query all Devices by type
-function getDevices(int){
+function getDevices() {
   usbWorker.postMessage({'dev':dev});
   pciWorker.postMessage({'dev':dev});
   micWorker.postMessage({'dev':dev});
@@ -194,16 +199,53 @@ function getDevices(int){
 }
 
 usbWorker.onmessage = function(e) {
-  console.log(e.data);
+  makeDevices(e,'USB');
 }
 pciWorker.onmessage = function(e) {
-  console.log(e.data);
+  makeDevices(e,'PCI')
 }
 micWorker.onmessage = function(e) {
-  console.log(e.data);
+  makeDevices(e,'MIC');
 }
 blkWorker.onmessage = function(e) {
-  console.log(e.data);
+  makeDevices(e,'BLK');
+}
+
+function makeDevices(e,type) {
+  var header = 'Type,Backend,DevID,Description,UsedBy'.split(',');
+  var qvm_devices = e.data.split('\n');
+  qvm_devices.forEach(function (item) {
+    var item = (type + '  ' + item).replace(':','  ').split(/\s{2,}/g);
+    if ( item[4] === undefined ) { item[4] = "" }
+    if ( Devices[item[2]] === undefined ) { Devices[item[2]] = new Object(); }
+    item.forEach(function (val,index) {
+      Devices[item[2]][header[index]] = val;
+    });
+  });
+  drawDevs(type);
+}
+
+/// Set the board with Devices
+function drawDevs(type_) {
+  for ( Device in Devices ) {
+    var type  = Devices[Device]['Type'];
+    var devID = Devices[Device]['DevID'].replace('.','-');
+    var desc  = Devices[Device]['Description'];
+    if ( type == type_ && $('#'+devID).length == 0 ) {
+      //console.log(type + " - " + devID + " - " + desc);
+      var icon = 'imgfiles/' + type + '.png';
+      $('div.DEV_container.'+type).append('<div id='+devID+'>'+desc+'</div>');
+      $('#'+devID).addClass(type).addClass('device').prepend('<img class=devicon src='+icon+'>');
+      //moveableDevs();
+    }
+  }
+}
+
+function moveableDevs() {
+  $('.device').each(function() {
+    jsPlumb.setDraggable($(this),true);
+    jsPlumb.draggable($(this),{ grid: [hori_int,vert_int] });
+  });
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -665,9 +707,8 @@ function ildeTimer(threshold) {
 
 $(document).ready(function() {
   bindDevConsole();
+  loadcssfiles(object_css,theme_css);
   initializeTheme();
-  loadcssfile(object_css);
-  loadcssfile(theme_css);
   //netvmConnections();
   //templateConnections();
   activeTimer();
